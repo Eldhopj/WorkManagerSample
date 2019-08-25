@@ -4,10 +4,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
@@ -50,18 +52,10 @@ public class MainActivity extends AppCompatActivity {
     private OneTimeWorkRequest onetimeWorkReq() {
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest
                 .Builder(WorkerClass.class)
+                .setInputData(getDataToSend())
                 .setConstraints(getConstraint())
                 .build();
         return workRequest;
-    }
-
-    // creates constraints for job to run , the job will run when the constraints satisfies
-    private Constraints getConstraint() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.METERED)
-                .setRequiresCharging(true)
-                .build();
-        return constraints;
     }
 
     // Observe the work changes
@@ -75,13 +69,34 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
                         // workInfo : live data where the status of work contains
-                        workStatus.setText("Status : " + workInfo.getState().name());
-                        if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                            Log.d(TAG, "onChanged: " + "succeed");
+                        workStatus.append("Status : " + workInfo.getState().name());
+                        if (workInfo.getState().isFinished()) {
+                            Log.d(TAG, "work: " + "succeed");
+                            Toast.makeText(MainActivity.this, "result: " + workInfo.getOutputData().getString(WorkerClass.TASK_OUTPUT), Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "result: " + workInfo.getOutputData().getString(WorkerClass.TASK_OUTPUT));
                         }
                     }
                 });
     }
+
+    // Sending data to the worker class
+    private Data getDataToSend() {
+        Data data = new Data.Builder()
+                .putString(WorkerClass.TASK_DESC, "Sample Task") //Note : We can send almost all data types
+                .putBoolean(WorkerClass.IS_TO_BE_DONE, true)
+                .build();
+        return data;
+    }
+
+    // creates constraints for job to run , the job will run when the constraints satisfies
+    private Constraints getConstraint() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.METERED)
+                .setRequiresCharging(true)
+                .build();
+        return constraints;
+    }
+
 
     @OnClick(R.id.oneTimeWork)
     public void onClick() {

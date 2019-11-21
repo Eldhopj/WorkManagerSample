@@ -8,12 +8,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
-import androidx.work.Constraints;
-import androidx.work.Data;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -36,72 +32,45 @@ public class MainActivity extends AppCompatActivity {
     Button oneTimeWork;
     @BindView(R.id.workStatus)
     TextView workStatus;
+    private WorkerViewModel viewModel;
     private static final String TAG = "MainActivity";
-    private WorkManager mWorkManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        mWorkManager = WorkManager.getInstance(getApplicationContext());
+        viewModel = ViewModelProviders.of(this).get(WorkerViewModel.class);
         workInfoListener();
-
     }
 
-    private OneTimeWorkRequest onetimeWorkReq() {
-        OneTimeWorkRequest workRequest = new OneTimeWorkRequest
-                .Builder(WorkerClass.class)
-                .setInputData(getDataToSend())
-                .setConstraints(getConstraint())
-                .build();
-        return workRequest;
-    }
+
 
     // Observe the work changes
     private void workInfoListener() {
-        mWorkManager.getWorkInfoByIdLiveData(onetimeWorkReq().getId())
-                .observe(this, new Observer<WorkInfo>() {
-                    @Override
-                    public void onChanged(WorkInfo workInfo) {
-                        // If there are no matching work info, do nothing
-                        if (workInfo == null) {
-                            return;
-                        }
-                        // workInfo : live data where the status of work contains
-                        workStatus.append("Status : " + workInfo.getState().name());
-                        if (workInfo.getState().isFinished()) {
-                            Log.d(TAG, "work: " + "succeed");
-                            Toast.makeText(MainActivity.this, "result: " + workInfo.getOutputData().getString(WorkerClass.TASK_OUTPUT), Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "result: " + workInfo.getOutputData().getString(WorkerClass.TASK_OUTPUT));
-                        }
-                    }
-                });
-    }
-
-    // Sending data to the worker class
-    private Data getDataToSend() {
-        Data data = new Data.Builder()
-                .putString(WorkerClass.TASK_DESC, "Sample Task") //Note : We can send almost all data types
-                .putBoolean(WorkerClass.IS_TO_BE_DONE, true)
-                .build();
-        return data;
-    }
-
-    // creates constraints for job to run , the job will run when the constraints satisfies
-    private Constraints getConstraint() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.METERED)
-                .setRequiresCharging(true)
-                .build();
-        return constraints;
+        viewModel.getOutputWorkInfo().observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(WorkInfo workInfo) {
+                // If there are no matching work info, do nothing
+                if (workInfo == null) {
+                    return;
+                }
+                // workInfo : live data where the status of work contains
+                workStatus.append("Status : " + workInfo.getState().name());
+                if (workInfo.getState().isFinished()) {
+                    Log.d(TAG, "work: " + "succeed");
+                    Toast.makeText(MainActivity.this, "result: " + workInfo.getOutputData().getString(WorkerClass.TASK_OUTPUT), Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "result: " + workInfo.getOutputData().getString(WorkerClass.TASK_OUTPUT));
+                }
+            }
+        });
     }
 
 
     @OnClick(R.id.oneTimeWork)
     public void onClick() {
-        // we need work manager to perform the work
-        mWorkManager.enqueue(onetimeWorkReq());
+        viewModel.startOneTimeWorkRequest();
     }
 
 

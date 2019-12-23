@@ -10,7 +10,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -42,16 +41,13 @@ public class NotificationUtils {
     private static Bitmap largeIcon(Context context) {
         /**Decode an image from the resources to an bitmap image*/
         Resources res = context.getResources();
-        Bitmap largeIcon = BitmapFactory.decodeResource(res, R.drawable.ic_launcher_foreground);
-        return largeIcon;
+        return BitmapFactory.decodeResource(res, R.drawable.ic_launcher_foreground);
     }
 
 
 
     //This method is responsible for creating the notification and notification channel in which the notification belongs to and displaying it
     public static void createNotifications(Context context,String title, String body) {
-
-        Log.d(TAG, "createNotifications: "+body);
 
         /**From Oreo we need to display notifications in the notification channel*/
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -88,14 +84,6 @@ public class NotificationUtils {
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
     }
 
-    /**
-     * Dismiss any notification which comes in
-     */
-    public static void clearAllNotifications(Context context) {
-        NotificationManager notificationManager = (NotificationManager)
-                context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancelAll();
-    }
 }
 
 

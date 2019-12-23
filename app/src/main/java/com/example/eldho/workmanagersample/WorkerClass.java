@@ -11,6 +11,8 @@ import androidx.work.WorkerParameters;
 /**
  * We can pass multiple work request to work manager, if we pass several work req to a single method call, work manager do it in parallel
  */
+
+//Worker : The work needed to be done is defined here
 public class WorkerClass extends Worker {
     private Context mContext;
     private static final String TAG = "WorkerClass";

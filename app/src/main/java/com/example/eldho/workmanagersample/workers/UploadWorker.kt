@@ -2,21 +2,29 @@ package com.example.eldho.workmanagersample.workers
 
 import android.content.Context
 import android.util.Log
+import androidx.work.CoroutineWorker
 import androidx.work.Data
-import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.eldho.workmanagersample.MainActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 private const val TAG = "UploadWorker"
 
 class UploadWorker(private val appContext: Context, workerParams: WorkerParameters) :
-    Worker(appContext, workerParams) {
+    CoroutineWorker(appContext, workerParams) {
 
-    override fun doWork(): Result {
+    /**
+     *  doWork() method is run async (Because of CoroutineWorker, else if we use Worker it will run synchronously ) on a background thread provided by WorkManager
+     *  */
+
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val data = inputData // get the data which are passing to workRequest
         val length = data.getLong(MainActivity.TASK_DESC, 4)
-        return try {
-            Thread.sleep(length * 1000)
+        return@withContext try {
+
+            delay(length * 1000)
 
             val result = getSendResult(true, "Success") // Sending success data/Result back to activity/fragment
             Result.success(result) // if work is success

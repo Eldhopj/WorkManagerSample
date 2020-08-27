@@ -2,22 +2,24 @@ package com.example.eldho.workmanagersample.workers
 
 import android.content.Context
 import android.util.Log
+import androidx.work.CoroutineWorker
 import androidx.work.Data
-import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.eldho.workmanagersample.MainActivity
 import com.example.eldho.workmanagersample.NotificationUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class WorkerClass(private val appContext: Context, workerParams: WorkerParameters) :
-    Worker(appContext, workerParams) {
+    CoroutineWorker(appContext, workerParams) {
 
     /**
-     *  doWork() method is run synchronously on a background thread provided by WorkManager
+     *  doWork() method is run async (Because of CoroutineWorker, else if we use Worker it will run synchronously ) on a background thread provided by WorkManager
      *  */
-    override fun doWork(): Result {
+    override suspend fun doWork(): Result = withContext(Dispatchers.Default) {
         val data = inputData // get the data which are passing to workRequest
         val desc = data.getString(MainActivity.TASK_DESC)
-        return try {
+        return@withContext try {
             // Work here is to display a notification
             NotificationUtils.createNotifications(appContext, "Success", desc)
 

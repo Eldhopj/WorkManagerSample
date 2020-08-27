@@ -13,32 +13,33 @@ class WorkerViewModel(application: Application) : AndroidViewModel(application) 
 
     private val mWorkManager: WorkManager by lazy { WorkManager.getInstance(application) }
 
-    val oneTimeWorkReq: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(onetimeWorkReq().id) }
-    val uploadingWorkReq: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(uploadingWorkReq().id) }
-    val periodicWorkRequest: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(periodicWorkRequest().id) }
+    val oneTimeWorkObserver: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(oneTimeWorkReq.id) }
+    val uploadingWorkObserver: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(uploadingWorkReq.id) }
+    val periodicWorkObserver: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(periodicWorkReq.id) }
 
     /**
      * WorkRequest : it define work, like which worker class is going to be executed.
      * The WorkRequest is an abstract class so we will use the direct subclasses so we will use the direct subclasses,"OneTimeWorkRequest" or "PeriodicWorkRequest"
      */
     //---------- creation of works --------------//
-    private fun onetimeWorkReq(): OneTimeWorkRequest {
-        return OneTimeWorkRequest.Builder(WorkerClass::class.java)
+
+    private val oneTimeWorkReq: OneTimeWorkRequest by lazy {
+        OneTimeWorkRequest.Builder(WorkerClass::class.java)
             .setInputData(dataToSend)
             .setConstraints(constraint)
             .build()
     }
 
-    private fun uploadingWorkReq(): OneTimeWorkRequest {
-        return OneTimeWorkRequest.Builder(UploadWorker::class.java)
+    private val uploadingWorkReq: OneTimeWorkRequest by lazy {
+        OneTimeWorkRequest.Builder(UploadWorker::class.java)
             .setInputData(dataToSend)
             .setConstraints(constraint)
             .build()
     }
 
     //NOTE : we cant chain periodic work request
-    private fun periodicWorkRequest(): PeriodicWorkRequest {
-        return PeriodicWorkRequest
+    private val periodicWorkReq: PeriodicWorkRequest by lazy {
+        PeriodicWorkRequest
             .Builder(WorkerClass::class.java,
                 16, TimeUnit.MINUTES) //NOTE : minimum period is 15 mins between works
             .build()
@@ -61,24 +62,28 @@ class WorkerViewModel(application: Application) : AndroidViewModel(application) 
             .build()
 
     fun startOneTimeWorkRequest() {
-        mWorkManager.enqueue(onetimeWorkReq())
+        mWorkManager.enqueue(oneTimeWorkReq)
     }
 
     fun startPeriodicWorkRequest() {
-        mWorkManager.enqueue(periodicWorkRequest())
+        mWorkManager.enqueue(periodicWorkReq)
+    }
+
+    fun startParallelWork() {
+        val parallelWorks = mutableListOf<OneTimeWorkRequest>()
+        parallelWorks.add(oneTimeWorkReq)
+        parallelWorks.add(uploadingWorkReq)
+
+        mWorkManager.enqueue(parallelWorks)
     }
 
     fun startChainingWorkRequest() {
-        val parallelWorks = mutableListOf<OneTimeWorkRequest>()
-        parallelWorks.add(onetimeWorkReq())
-        parallelWorks.add(uploadingWorkReq())
 
-        /**First execute the  onetimeWorkReq()
-         * after that work, 2 works in execute in parallel,
-         * after that the last sequential work will execute */
-        mWorkManager.beginWith(uploadingWorkReq()) // sequential work
-            .then(parallelWorks) // parallel works
-            .then(onetimeWorkReq()) // sequential work
+        /**
+         * we can execute works parallel as well as sequential works together in a chain
+         * */
+        mWorkManager.beginWith(uploadingWorkReq)
+            .then(oneTimeWorkReq)
             .enqueue()
     }
 }

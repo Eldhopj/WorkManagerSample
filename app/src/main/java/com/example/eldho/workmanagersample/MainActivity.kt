@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
     // -----------Observe the work requests changes ---------------//
 
     private fun notificationWorkInfoListener() {
-        viewModel.oneTimeWorkReq
+        viewModel.oneTimeWorkObserver
             .observe(this, Observer { workInfo -> // If there are no matching work info, do nothing
                 if (workInfo == null) { // WorkInfo : it contains info about the work like work id , status etc....
                     return@Observer
@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun uploadingInfoListener() {
-        viewModel.uploadingWorkReq
+        viewModel.uploadingWorkObserver
             .observe(this, Observer { workInfo -> // If there are no matching work info, do nothing
                 if (workInfo == null) { // WorkInfo : it contains info about the work like work id , status etc....
                     return@Observer
@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun periodicNotificationWorkInfoListener() {
-        viewModel.periodicWorkRequest
+        viewModel.periodicWorkObserver
             .observe(this, Observer { workInfo -> // If there are no matching work info, do nothing
                 if (workInfo == null) { // WorkInfo : it contains info about the work like work id , status etc....
                     return@Observer

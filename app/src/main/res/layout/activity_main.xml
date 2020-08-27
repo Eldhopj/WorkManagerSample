@@ -10,14 +10,16 @@
         android:id="@+id/oneTimeWork"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:onClick="oneTimeWork"
         android:text="Perform One Time Work"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/chainingWork"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/workStatus"
+        android:id="@+id/workStatusTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -27,5 +29,29 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/chainingWork"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="chainWork"
+        android:text="Perform Chaining Work"
+        app:layout_constraintBottom_toTopOf="@+id/perodicWork"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/oneTimeWork" />
+
+    <Button
+        android:id="@+id/perodicWork"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="periodicWork"
+        android:text="Periodic Work Request"
+        app:layout_constraintBottom_toTopOf="@+id/workStatusTv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/chainingWork" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

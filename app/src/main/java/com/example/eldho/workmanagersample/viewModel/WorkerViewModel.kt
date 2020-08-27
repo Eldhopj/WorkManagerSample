@@ -1,10 +1,12 @@
-package com.example.eldho.workmanagersample
+package com.example.eldho.workmanagersample.viewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.work.*
+import com.example.eldho.workmanagersample.MainActivity
 import com.example.eldho.workmanagersample.workers.UploadWorker
+import com.example.eldho.workmanagersample.workers.WorkerClass
 import java.util.concurrent.TimeUnit
 
 class WorkerViewModel(application: Application) : AndroidViewModel(application) {

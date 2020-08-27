@@ -1,4 +1,4 @@
-package com.example.eldho.workmanagersample;
+package com.example.eldho.workmanagersample.notification;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -14,6 +14,9 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
+
+import com.example.eldho.workmanagersample.MainActivity;
+import com.example.eldho.workmanagersample.R;
 
 public class NotificationUtils {
     private static final String TAG = "NotificationUtils";

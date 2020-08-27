@@ -6,7 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import com.example.eldho.workmanagersample.MainActivity
-import com.example.eldho.workmanagersample.NotificationUtils
+import com.example.eldho.workmanagersample.notification.NotificationUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

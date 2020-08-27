@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 30
@@ -38,6 +39,8 @@ dependencies {
 
     //Work Manager
     implementation "androidx.work:work-runtime-ktx:$work_version"
+
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
 
 }
 repositories {

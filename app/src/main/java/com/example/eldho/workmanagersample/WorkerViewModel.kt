@@ -1,87 +1,82 @@
-package com.example.eldho.workmanagersample;
+package com.example.eldho.workmanagersample
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.work.*
+import com.example.eldho.workmanagersample.workers.UploadWorker
+import java.util.concurrent.TimeUnit
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.work.Constraints;
-import androidx.work.Data;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
+class WorkerViewModel(application: Application) : AndroidViewModel(application) {
 
-import java.util.concurrent.TimeUnit;
+    private val mWorkManager: WorkManager by lazy { WorkManager.getInstance(application) }
 
-public class WorkerViewModel extends AndroidViewModel {
-
-    private WorkManager mWorkManager;
-    private LiveData<WorkInfo> workInfoLiveData;
-
-    public WorkerViewModel(@NonNull Application application) {
-        super(application);
-        mWorkManager = WorkManager.getInstance(application); //WorkManager : it enqueues and managers the work request
-        workInfoLiveData = mWorkManager.getWorkInfoByIdLiveData(onetimeWorkReq().getId());
-    }
+    val oneTimeWorkReq: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(onetimeWorkReq().id) }
+    val uploadingWorkReq: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(uploadingWorkReq().id) }
+    val periodicWorkRequest: LiveData<WorkInfo> by lazy { mWorkManager.getWorkInfoByIdLiveData(periodicWorkRequest().id) }
 
     /**
      * WorkRequest : it define work, like which worker class is going to be executed.
      * The WorkRequest is an abstract class so we will use the direct subclasses so we will use the direct subclasses,"OneTimeWorkRequest" or "PeriodicWorkRequest"
      */
-    private OneTimeWorkRequest onetimeWorkReq() {
-        OneTimeWorkRequest workRequest = new OneTimeWorkRequest
-                .Builder(WorkerClass.class)
-                .setInputData(getDataToSend())
-                .setConstraints(getConstraint())
-                .build();
-        return workRequest;
+    //---------- creation of works --------------//
+    private fun onetimeWorkReq(): OneTimeWorkRequest {
+        return OneTimeWorkRequest.Builder(WorkerClass::class.java)
+            .setInputData(dataToSend)
+            .setConstraints(constraint)
+            .build()
     }
 
-    /**
-     * Minimum period length is 15 minutes (same as JobScheduler)
-     * Worker classes cannot be chained in a PeriodicWorkRequest
-     */
-    private PeriodicWorkRequest periodicWorkReq() {
-        PeriodicWorkRequest workRequest = new PeriodicWorkRequest
-                .Builder(WorkerClass.class, 20, TimeUnit.MINUTES) // Repeats work in every 20 mins
-                .setInputData(getDataToSend())
-                .setConstraints(getConstraint())
-                .build();
-        return workRequest;
+    private fun uploadingWorkReq(): OneTimeWorkRequest {
+        return OneTimeWorkRequest.Builder(UploadWorker::class.java)
+            .setInputData(dataToSend)
+            .setConstraints(constraint)
+            .build()
     }
 
+    //NOTE : we cant chain periodic work request
+    private fun periodicWorkRequest(): PeriodicWorkRequest {
+        return PeriodicWorkRequest
+            .Builder(WorkerClass::class.java,
+                16, TimeUnit.MINUTES) //NOTE : minimum period is 15 mins between works
+            .build()
+    }
+    //---------- end of creation of works --------------//
 
-    // Sending data to the worker class
-    private Data getDataToSend() {
-        Data data = new Data.Builder()
-                .putString(WorkerClass.TASK_DESC, "Sample Task") //Note : We can send almost all data types
-                .putBoolean(WorkerClass.IS_TO_BE_DONE, true)
-                .build();
-        return data;
+
+    /** Sending data to the worker class */
+    private val dataToSend: Data
+        get() = Data.Builder()
+            .putString(MainActivity.TASK_DESC, "Sample Task") //Note : We can send almost all data types
+            .putBoolean(MainActivity.IS_TO_BE_DONE, true)
+            .build()
+
+    /** creates constraints for job to run , the job will run when the constraints satisfies*/
+    private val constraint: Constraints
+        get() = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.METERED)
+            .setRequiresCharging(true)
+            .build()
+
+    fun startOneTimeWorkRequest() {
+        mWorkManager.enqueue(onetimeWorkReq())
     }
 
-    // creates constraints for job to run , the job will run when the constraints satisfies
-    private Constraints getConstraint() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.UNMETERED)
-                .setRequiresCharging(false)
-                .build();
-        return constraints;
+    fun startPeriodicWorkRequest() {
+        mWorkManager.enqueue(periodicWorkRequest())
     }
 
-    void startOneTimeWorkRequest() {
-        // we need work manager to perform the work
-        mWorkManager.enqueue(onetimeWorkReq());
-    }
+    fun startChainingWorkRequest() {
+        val parallelWorks = mutableListOf<OneTimeWorkRequest>()
+        parallelWorks.add(onetimeWorkReq())
+        parallelWorks.add(uploadingWorkReq())
 
-    void startPeriodicWorkRequest() {
-        // we need work manager to perform the work
-        mWorkManager.enqueue(periodicWorkReq());
-    }
-
-    LiveData<WorkInfo> getOutputWorkInfo() {
-        return workInfoLiveData;
+        /**First execute the  onetimeWorkReq()
+         * after that work, 2 works in execute in parallel,
+         * after that the last sequential work will execute */
+        mWorkManager.beginWith(uploadingWorkReq()) // sequential work
+            .then(parallelWorks) // parallel works
+            .then(onetimeWorkReq()) // sequential work
+            .enqueue()
     }
 }

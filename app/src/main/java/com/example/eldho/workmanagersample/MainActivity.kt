@@ -6,11 +6,11 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.work.*
+import androidx.lifecycle.ViewModelProvider
 import com.example.eldho.workmanagersample.workers.UploadWorker
 import com.example.eldho.workmanagersample.workers.WorkerClass
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.TimeUnit
+
 
 /**
  * NOTE : WorkManager is intended for tasks that are not required to run immediately , and required to run reliably even if the app exits or the device restart
@@ -28,7 +28,7 @@ private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
-    private val mWorkManager: WorkManager by lazy { WorkManager.getInstance(applicationContext) }
+    private val viewModel: WorkerViewModel by lazy { ViewModelProvider(this).get(WorkerViewModel::class.java) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,71 +41,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun oneTimeWork(view: View) {
-        mWorkManager.enqueue(onetimeWorkReq())
+        viewModel.startOneTimeWorkRequest()
     }
 
     fun chainWork(view: View) {
-        val parallelWorks = mutableListOf<OneTimeWorkRequest>()
-        parallelWorks.add(onetimeWorkReq())
-        parallelWorks.add(uploadingWorkReq())
-
-        /**First execute the  onetimeWorkReq()
-         * after that work, 2 works in execute in parallel,
-         * after that the last sequential work will execute */
-        mWorkManager.beginWith(uploadingWorkReq()) // sequential work
-            .then(parallelWorks) // parallel works
-            .then(onetimeWorkReq()) // sequential work
-            .enqueue()
+        viewModel.startChainingWorkRequest()
     }
 
     //NOTE : minimum period is 15 mins between works
     fun periodicWork(view: View) {
-        mWorkManager.enqueue(periodicWorkRequest())
+        viewModel.startPeriodicWorkRequest()
     }
-
-
-    // ---------- creation of works --------------//
-    private fun onetimeWorkReq(): OneTimeWorkRequest {
-        return OneTimeWorkRequest.Builder(WorkerClass::class.java)
-            .setInputData(dataToSend)
-            .setConstraints(constraint)
-            .build()
-    }
-
-    private fun uploadingWorkReq(): OneTimeWorkRequest {
-        return OneTimeWorkRequest.Builder(UploadWorker::class.java)
-            .setInputData(dataToSend)
-            .setConstraints(constraint)
-            .build()
-    }
-
-    private fun periodicWorkRequest(): PeriodicWorkRequest {
-        return PeriodicWorkRequest
-            .Builder(WorkerClass::class.java,
-                16, TimeUnit.MINUTES) //NOTE : minimum period is 15 mins between works
-            .build()
-    }
-    // ---------- end creation of works --------------//
-
-
-    /** Sending data to the worker class */
-    private val dataToSend: Data
-        get() = Data.Builder()
-            .putString(TASK_DESC, "Sample Task") //Note : We can send almost all data types
-            .putBoolean(IS_TO_BE_DONE, true)
-            .build()
-
-    /** creates constraints for job to run , the job will run when the constraints satisfies*/
-    private val constraint: Constraints
-        get() = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.METERED)
-            .setRequiresCharging(true)
-            .build()
 
 
     // -----------Observe the work requests changes ---------------//
+
     private fun notificationWorkInfoListener() {
-        mWorkManager.getWorkInfoByIdLiveData(onetimeWorkReq().id) // Filter by work id
+        viewModel.oneTimeWorkReq
             .observe(this, Observer { workInfo -> // If there are no matching work info, do nothing
                 if (workInfo == null) { // WorkInfo : it contains info about the work like work id , status etc....
                     return@Observer
@@ -123,10 +75,10 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "result: " + workInfo.outputData.getString(WorkerClass.TASK_OUTPUT))
                 }
             })
-    }//Note : We can send almost all data types
+    }
 
     private fun uploadingInfoListener() {
-        mWorkManager.getWorkInfoByIdLiveData(uploadingWorkReq().id)
+        viewModel.uploadingWorkReq
             .observe(this, Observer { workInfo -> // If there are no matching work info, do nothing
                 if (workInfo == null) { // WorkInfo : it contains info about the work like work id , status etc....
                     return@Observer
@@ -144,10 +96,10 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "result: " + workInfo.outputData.getString(UploadWorker.TASK_OUTPUT))
                 }
             })
-    }//Note : We can send almost all data types
+    }
 
     private fun periodicNotificationWorkInfoListener() {
-        mWorkManager.getWorkInfoByIdLiveData(periodicWorkRequest().id) // Filter by work id
+        viewModel.periodicWorkRequest
             .observe(this, Observer { workInfo -> // If there are no matching work info, do nothing
                 if (workInfo == null) { // WorkInfo : it contains info about the work like work id , status etc....
                     return@Observer
@@ -165,9 +117,8 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "result: " + workInfo.outputData.getString(WorkerClass.TASK_OUTPUT))
                 }
             })
-    }//Note : We can send almost all data types
-
-    // -------------- end Observe the work requests changes -------------//
+    }
+    // -------------- end of Observe the work requests changes -------------//
 
 
     companion object {

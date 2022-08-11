@@ -77,8 +77,7 @@ public class NotificationUtils {
 
                 .setAutoCancel(true); //Notification will go away when user clicks on it
         /**this will give heads up notification on versions below Oreo*/
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN
-                && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             notificationBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
         }
         //Notification Manager

@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.example.eldho.workmanagersample.MainActivity
 import com.example.eldho.workmanagersample.notification.NotificationUtils
 import kotlinx.coroutines.Dispatchers
@@ -41,11 +42,10 @@ class WorkerClass(private val appContext: Context, workerParams: WorkerParameter
 
     // Sending success data/Result back to activity/fragment which then observed in `getWorkInfoByIdLiveData`
     private fun getSendResult(isDone: Boolean, taskOutput: String): Data {
-        return Data.Builder()
-            //Note : We can send almost all data types
-            .putString(TASK_OUTPUT, taskOutput)
-            .putBoolean(IS_DONE, isDone)
-            .build()
+        return workDataOf(
+            TASK_OUTPUT to taskOutput,
+            IS_DONE to isDone
+        )
     }
 
     companion object {

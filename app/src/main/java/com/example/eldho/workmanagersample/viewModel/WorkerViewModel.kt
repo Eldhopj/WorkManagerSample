@@ -3,8 +3,15 @@ package com.example.eldho.workmanagersample.viewModel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.work.*
-import com.example.eldho.workmanagersample.MainActivity
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.example.eldho.workmanagersample.MainActivity.Companion.IS_TO_BE_DONE
+import com.example.eldho.workmanagersample.MainActivity.Companion.TASK_DESC
 import com.example.eldho.workmanagersample.workers.UploadWorker
 import com.example.eldho.workmanagersample.workers.WorkerClass
 import java.util.concurrent.TimeUnit
@@ -48,11 +55,11 @@ class WorkerViewModel(application: Application) : AndroidViewModel(application) 
 
 
     /** Sending data to the worker class */
-    private val dataToSend: Data
-        get() = Data.Builder()
-            .putString(MainActivity.TASK_DESC, "Sample Task") //Note : We can send almost all data types
-            .putBoolean(MainActivity.IS_TO_BE_DONE, true)
-            .build()
+    private val dataToSend
+        get() = workDataOf(
+            TASK_DESC to "Sample Task",
+            IS_TO_BE_DONE to true
+        )
 
     /** creates constraints for job to run , the job will run when the constraints satisfies*/
     private val constraint: Constraints

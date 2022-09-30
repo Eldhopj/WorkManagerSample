@@ -34,6 +34,7 @@ class WorkerViewModel(application: Application) : AndroidViewModel(application) 
         OneTimeWorkRequest.Builder(WorkerClass::class.java)
             .setInputData(dataToSend)
             .setConstraints(constraint)
+//            .setInitialDelay(15, TimeUnit.DAYS)
             .build()
     }
 

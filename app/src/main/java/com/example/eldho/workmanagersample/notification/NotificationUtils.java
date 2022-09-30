@@ -37,7 +37,7 @@ public class NotificationUtils {
                 PENDING_INTENT_ID,
                 startActivityIntent,
                 //FLAG_UPDATE_CURRENT -> keeps this instance valid and just updates the extra data associated with it coming from new intent
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     //Helps to create a bitmap image shown in the Notification

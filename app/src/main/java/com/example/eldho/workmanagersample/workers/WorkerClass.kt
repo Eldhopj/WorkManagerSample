@@ -2,27 +2,36 @@ package com.example.eldho.workmanagersample.workers
 
 import android.content.Context
 import android.util.Log
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.example.eldho.workmanagersample.MainActivity
 import com.example.eldho.workmanagersample.notification.NotificationUtils
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class WorkerClass(private val appContext: Context, workerParams: WorkerParameters) :
+
+@HiltWorker // Dependency injection in worker class is not a straight forward thing we needed to use hilt work for injecting dependencies into worker class
+class WorkerClass @AssistedInject constructor(
+    @Assisted private val appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val notificationUtils: NotificationUtils
+) :
     CoroutineWorker(appContext, workerParams) {
 
     /**
-     *  doWork() method is run async (Because of CoroutineWorker, else if we use Worker it will run synchronously ) on a background thread provided by WorkManager
+     * doWork() method is run async (Because of CoroutineWorker, else if we use Worker it will run synchronously ) on a background thread provided by WorkManager
      *  */
     override suspend fun doWork(): Result = withContext(Dispatchers.Default) {
         val data = inputData // get the data which are passing to workRequest
         val desc = data.getString(MainActivity.TASK_DESC)
         return@withContext try {
             // Work here is to display a notification
-            NotificationUtils.createNotifications(appContext, "Success", desc)
+            notificationUtils.createNotifications("Success", desc)
 
             val result = getSendResult(
                 true,
@@ -36,7 +45,7 @@ class WorkerClass(private val appContext: Context, workerParams: WorkerParameter
             Log.e(TAG, "Error ", throwable)
             val result = getSendResult(false, "Failure")
             Result.failure(result)
-            //          return Result.retry(); // if we want to retry the task
+            //Result.retry()  // if we want to retry the task
         }
     }
 

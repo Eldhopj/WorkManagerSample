@@ -78,10 +78,7 @@ class WorkerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun startParallelWork() {
-        val parallelWorks = mutableListOf<OneTimeWorkRequest>()
-        parallelWorks.add(oneTimeWorkReq)
-        parallelWorks.add(uploadingWorkReq)
-
+        val parallelWorks = listOf(oneTimeWorkReq, uploadingWorkReq)
         mWorkManager.enqueue(parallelWorks)
     }
 
